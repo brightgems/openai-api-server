@@ -1,0 +1,4 @@
+fastapi~=0.89.1
+jose~=1.0.0
+openai~=0.26.4
+tiktoken~=0.2.0
