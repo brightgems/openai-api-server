@@ -9,3 +9,4 @@ python -m venv ./env
 
 ## Documents
 [Fast API Cookbook](https://fastapi.tiangolo.com/zh/tutorial/query-params/)
+[chatgpt-api](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)

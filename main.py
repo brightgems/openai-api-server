@@ -3,6 +3,8 @@ from typing import Union
 from fastapi import FastAPI, Request, Body, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from fastapi_jwt_auth import AuthJWT
+from fastapi_jwt_auth.exceptions import AuthJWTException
 from chatgpt import chatbot
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from utils import PermissionNotEnough
@@ -12,48 +14,59 @@ app = FastAPI()
 security = HTTPBasic()
 
 
-def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
-    current_username_bytes = credentials.username.encode("utf8")
-    correct_username_bytes = b"georgeEdison"
-    is_correct_username = secrets.compare_digest(
-        current_username_bytes, correct_username_bytes
-    )
-    current_password_bytes = credentials.password.encode("utf8")
-    correct_password_bytes = b"sword&fish"
-    is_correct_password = secrets.compare_digest(
-        current_password_bytes, correct_password_bytes
-    )
-    if not (is_correct_username and is_correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return credentials.username
+class Settings(BaseModel):
+    authjwt_secret_key: str = "secret"
+
+# region: interface
+
+
+class User(BaseModel):
+    username: str
+    password: str
 
 
 class ChatRequest(BaseModel):
-    name: str
-    description: Union[str, None] = None
-    price: float
-    tax: Union[float, None] = None
+    conversationId: int = None
+    parentMessageId: int = None
+    message: str
 
 
 class ChatResponse(BaseModel):
-    name: str
-    description: Union[str, None] = None
-    price: float
-    tax: Union[float, None] = None
+    ask: str = None
+    response: str = None
+# endregion: interface
+
+# callback to get your configuration
 
 
-@app.post("/chat" credentials: HTTPBasicCredentials=Depends(security), summary="ChatGPT接口")
-async def chat(request: Request, p: str = Body("", title="发言", embed=True)):
-    if "authorization" not in request.headers.keys():
-        raise PermissionNotEnough()
-    else:
-        token = request.headers.get("authorization")
+@AuthJWT.load_config
+def get_config():
+    return Settings()
 
-        if "user" not in payload["scopes"]:
-            raise PermissionNotEnough()
-        response = chatbot.ask(p, conversation_id=payload["sub"])
-        return response["choices"][0]["text"]
+# exception handler for authjwt
+# in production, you can tweak performance using orjson response
+
+
+@app.post('/login')
+def login(user: User, Authorize: AuthJWT = Depends()):
+    if user.username != "openaiDriver" or user.password != "hope&poem":
+        raise HTTPException(status_code=401, detail="Bad username or password")
+
+    # subject identifier for who this token is for example id or username from database
+    access_token = Authorize.create_access_token(subject=user.username)
+    return {"access_token": access_token}
+
+
+@app.exception_handler(AuthJWTException)
+def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+
+
+@app.post("/chat", summary="ChatGPT接口")
+async def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    response = chatbot.ask(ask.message, conversation_id=ask.conversationId)
+    return response["choices"][0]["text"]
