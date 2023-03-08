@@ -1,4 +1,5 @@
 {
-    "vscode-pull-requests-azure-devops.collection": "https://dev.azure.com/ulcmi/cmiai/",
-    "vscode-pull-requests-azure-devops.access-token": "sx76vzh25qmazfy5p4xnbocziab4vcznx4dkrx44rjuvjsr4inea"
+    "python.linting.flake8Args": [
+        "--max-line-length=120"
+    ],
 }
