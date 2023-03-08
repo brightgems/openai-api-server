@@ -13,8 +13,7 @@ ENGINE = os.environ.get("GPT_ENGINE") or "text-chat-davinci-002-20221122"
 
 ENCODER = tiktoken.get_encoding("gpt2")
 
-CHATGPT_KEY = "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"
-
+CHATGPT_KEY = "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"
 
 
 def get_max_tokens(prompt: str) -> int:
@@ -367,6 +366,6 @@ class Conversation:
         with open(file, encoding="utf-8") as f:
             self.conversations = json.loads(f.read())
 
+
 # Initialize chatbot
 chatbot = Chatbot(api_key=CHATGPT_KEY)
-
