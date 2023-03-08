@@ -13,7 +13,7 @@ ENGINE = os.environ.get("GPT_ENGINE") or "text-davinci-003"
 
 ENCODER = tiktoken.get_encoding("gpt2")
 
-CHATGPT_KEY = "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"
+CHATGPT_KEY = os.getenv("OPENAI_API_KEY")
 
 
 def get_max_tokens(prompt: str) -> int:
