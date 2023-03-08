@@ -9,11 +9,11 @@ from datetime import date
 import openai
 import tiktoken
 
-ENGINE = os.environ.get("GPT_ENGINE") or "text-chat-davinci-002-20221122"
+ENGINE = os.environ.get("GPT_ENGINE") or "text-davinci-003"
 
 ENCODER = tiktoken.get_encoding("gpt2")
 
-CHATGPT_KEY = "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"
+CHATGPT_KEY = "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"
 
 
 def get_max_tokens(prompt: str) -> int:
@@ -46,9 +46,10 @@ class Chatbot:
         """
         Get the completion function
         """
-        return openai.Completion.create(
-            engine=self.engine,
-            prompt=prompt,
+        return openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": "You are a helpful assistant."},
+                      {"role": "user", "content": "Who won the world series in 2020?"},],
             temperature=temperature,
             max_tokens=get_max_tokens(prompt),
             stop=["\n\n\n"],

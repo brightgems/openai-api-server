@@ -1,1 +1,2 @@
-from .chat_api import chatbot
+from .gpt_api import gptbot
+from .chatgpt_api import chatbot
