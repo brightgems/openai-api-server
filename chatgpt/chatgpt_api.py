@@ -13,7 +13,7 @@ ENGINE = os.environ.get("GPT_ENGINE") or "text-davinci-003"
 
 ENCODER = tiktoken.get_encoding("gpt2")
 
-CHATGPT_KEY = "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"
+CHATGPT_KEY = "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"
 
 
 def get_max_tokens(prompt: str) -> int:
@@ -67,11 +67,9 @@ class Chatbot:
             raise Exception("ChatGPT API returned no choices")
         if len(completion["choices"]) == 0:
             raise Exception("ChatGPT API returned no choices")
-        if completion["choices"][0].get("text") is None:
-            raise Exception("ChatGPT API returned no text")
-        completion["choices"][0]["text"] = completion["choices"][0]["text"].rstrip(
-            "<|im_end|>",
-        )
+        if completion["choices"][0].get("message") is None:
+            raise Exception("ChatGPT API returned no message")
+        completion["choices"][0]["text"] = completion["choices"][0]["message"]['content']
         # Add to chat history
         self.prompt.add_to_history(
             user_request,
