@@ -40,7 +40,7 @@ class Chatbot:
         stream: bool = False,
     ) -> Dict:
         """Get the completion function
-        
+
         Arguments:
         messages -- conversation messages, example input:
             ```[{"role": "system", "content": "You are a helpful assistant."},
@@ -266,8 +266,9 @@ class Prompt:
         Add request/response to chat history for next prompt
         """
         self.add_to_chat_history(
-            {'role': "user", 'content': user_request},
-            {'role': "system", 'content': response}
+            [
+                {'role': "user", 'content': user_request},
+                {'role': "system", 'content': response}]
         )
 
     def history(self, custom_history: list = None) -> str:
