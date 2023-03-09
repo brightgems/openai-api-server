@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from chatgpt import chatbot
-from utils.schema import ChatRequest, Settings, User
+from utils.schema import ChatRequest, AuthSettings, User
 from utils.web_auth import Authenticator
 
 
@@ -14,7 +14,7 @@ app = FastAPI()
 
 @AuthJWT.load_config
 def get_config():
-    return Settings()
+    return AuthSettings()
 
 # exception handler for authjwt
 # in production, you can tweak performance using orjson response
@@ -25,9 +25,15 @@ def home():
     return {"msg": "Hello World"}
 
 
+@app.get("/ping", summary="ping test")
+async def ping(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    return True
+
+
 @app.post('/login')
 def login(user: User, Authorize: AuthJWT = Depends()):
-    if user.username.startswith("unilever"):
+    if not AuthSettings.is_authenticated(user.username, user.password):
         raise HTTPException(status_code=401, detail="Bad username or password")
 
     # subject identifier for who this token is for example id or username from database
@@ -52,7 +58,7 @@ async def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     return {"prompt": ask.message, "reponse": response_text}
 
 
-@app.post("/auth_token", summary="获取网页端的access token")
+@app.get("/web_auth_token", summary="获取网页端的access token")
 async def auth_token(Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     au = Authenticator("freemanjameshr@gmail.com", "a12345678")

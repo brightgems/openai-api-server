@@ -5,9 +5,13 @@ from pydantic import BaseModel
 users = [("openaiDriver", "hope&poem")]
 
 
-class Settings(BaseModel):
-    authjwt_secret_key: str = "secret"
+class AuthSettings(BaseModel):
+    authjwt_secret_key: str = "Jy771qqJWmvQN7c7oU1"
     algorithm = "HS256"
+
+    @classmethod
+    def is_authenticated(cls, username, password):
+        return username.count("@unilever.com")
 
 
 class User(BaseModel):
