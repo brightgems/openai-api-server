@@ -1,19 +1,15 @@
 """
 A simple wrapper for the official ChatGPT API
 """
-import argparse
 import json
 import os
-import sys
 from datetime import date
+from typing import Dict, List
 import openai
 import tiktoken
-
-ENGINE = os.environ.get("GPT_ENGINE") or "text-davinci-003"
+from config import CHAT_MODEL, OPENAI_API_KEY
 
 ENCODER = tiktoken.get_encoding("gpt2")
-
-CHATGPT_KEY = os.getenv("OPENAI_API_KEY")
 
 
 def get_max_tokens(prompt: str) -> int:
@@ -32,24 +28,31 @@ class Chatbot:
         """
         Initialize Chatbot with API key (from https://platform.openai.com/account/api-keys)
         """
-        openai.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        openai.api_key = api_key or CHATGPT_KEY
         self.conversations = Conversation()
         self.prompt = Prompt(buffer=buffer)
-        self.engine = engine or ENGINE
+        self.engine = engine or CHAT_MODEL
 
     def _get_completion(
         self,
-        prompt: str,
+        messages: List[dict],
         temperature: float = 0.5,
         stream: bool = False,
-    ):
+    ) -> Dict:
+        """Get the completion function
+        
+        Arguments:
+        messages -- conversation messages, example input:
+            ```[{"role": "system", "content": "You are a helpful assistant."},
+               {"role": "user", "content": "Who won the world series in 2020?"}]
+            ```
+        Return: return_description
         """
-        Get the completion function
-        """
+        prompt = messages[-1]['content']
+
         return openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": "You are a helpful assistant."},
-                      {"role": "user", "content": "Who won the world series in 2020?"},],
+            model=self.engine,
+            messages=messages,
             temperature=temperature,
             max_tokens=get_max_tokens(prompt),
             stop=["\n\n\n"],
@@ -60,8 +63,7 @@ class Chatbot:
         self,
         user_request: str,
         completion: dict,
-        conversation_id: str = None,
-        user: str = "User",
+        conversation_id: str = None
     ) -> dict:
         if completion.get("choices") is None:
             raise Exception("ChatGPT API returned no choices")
@@ -69,23 +71,21 @@ class Chatbot:
             raise Exception("ChatGPT API returned no choices")
         if completion["choices"][0].get("message") is None:
             raise Exception("ChatGPT API returned no message")
-        completion["choices"][0]["text"] = completion["choices"][0]["message"]['content']
+        response_text = completion["choices"][0]["message"]['content']
         # Add to chat history
         self.prompt.add_to_history(
             user_request,
-            completion["choices"][0]["text"],
-            user=user,
+            response_text
         )
         if conversation_id is not None:
             self.save_conversation(conversation_id)
-        return completion
+        return response_text
 
     def _process_completion_stream(
         self,
         user_request: str,
         completion: dict,
-        conversation_id: str = None,
-        user: str = "User",
+        conversation_id: str = None
     ) -> str:
         full_response = ""
         for response in completion:
@@ -95,15 +95,16 @@ class Chatbot:
                 raise Exception("ChatGPT API returned no choices")
             if response["choices"][0].get("finish_details") is not None:
                 break
-            if response["choices"][0].get("text") is None:
+            if response["choices"][0].get("message") is None:
                 raise Exception("ChatGPT API returned no text")
-            if response["choices"][0]["text"] == "<|im_end|>":
+            response_text = completion["choices"][0]["message"]['content']
+            if response_text == "<|im_end|>" or not response_text.strip():
                 break
-            yield response["choices"][0]["text"]
-            full_response += response["choices"][0]["text"]
+            yield response_text
+            full_response += response_text
 
         # Add to chat history
-        self.prompt.add_to_history(user_request, full_response, user)
+        self.prompt.add_to_history(user_request, full_response)
         if conversation_id is not None:
             self.save_conversation(conversation_id)
 
@@ -111,8 +112,7 @@ class Chatbot:
         self,
         user_request: str,
         temperature: float = 0.5,
-        conversation_id: str = None,
-        user: str = "User",
+        conversation_id: str = None
     ) -> dict:
         """
         Send a request to ChatGPT and return the response
@@ -120,29 +120,29 @@ class Chatbot:
         if conversation_id is not None:
             self.load_conversation(conversation_id)
         completion = self._get_completion(
-            self.prompt.construct_prompt(user_request, user=user),
+            self.prompt.construct_prompt_messages(user_request),
             temperature,
         )
-        return self._process_completion(user_request, completion, user=user)
+        response_text = self._process_completion(user_request, completion)
+        return {'user_request': user_request, 'response': response_text}
 
     def ask_stream(
         self,
         user_request: str,
         temperature: float = 0.5,
         conversation_id: str = None,
-        user: str = "User",
     ) -> str:
         """
         Send a request to ChatGPT and yield the response
         """
         if conversation_id is not None:
             self.load_conversation(conversation_id)
-        prompt = self.prompt.construct_prompt(user_request, user=user)
-        return self._process_completion_stream(
+        messages = self.prompt.construct_prompt_messages(user_request)
+        response_text = self._process_completion_stream(
             user_request=user_request,
-            completion=self._get_completion(prompt, temperature, stream=True),
-            user=user,
+            completion=self._get_completion(messages, temperature, stream=True)
         )
+        return {'user_request': user_request, 'response': response_text}
 
     def make_conversation(self, conversation_id: str) -> None:
         """
@@ -205,34 +205,33 @@ class AsyncChatbot(Chatbot):
     async def ask(
         self,
         user_request: str,
-        temperature: float = 0.5,
-        user: str = "User",
+        temperature: float = 0.5
     ) -> dict:
         """
         Same as Chatbot.ask but async
         }
         """
         completion = await self._get_completion(
-            self.prompt.construct_prompt(user_request, user=user),
+            self.prompt.construct_prompt_messages(user_request),
             temperature,
         )
-        return self._process_completion(user_request, completion, user=user)
+        response_text = self._process_completion(user_request, completion)
+        return {'user_request': user_request, 'response': response_text}
 
     async def ask_stream(
         self,
         user_request: str,
         temperature: float = 0.5,
-        user: str = "User",
     ) -> str:
         """
         Same as Chatbot.ask_stream but async
         """
-        prompt = self.prompt.construct_prompt(user_request, user=user)
-        return self._process_completion_stream(
+        prompt = self.prompt.construct_prompt_messages(user_request)
+        response_text = self._process_completion_stream(
             user_request=user_request,
-            completion=await self._get_completion(prompt, temperature, stream=True),
-            user=user,
+            completion=await self._get_completion(prompt, temperature, stream=True)
         )
+        return {'user_request': user_request, 'response': response_text}
 
 
 class Prompt:
@@ -244,14 +243,10 @@ class Prompt:
         """
         Initialize prompt with base prompt
         """
-        self.base_prompt = (
-            os.environ.get("CUSTOM_BASE_PROMPT")
-            or "You are ChatGPT, a large language model trained by OpenAI. Respond conversationally. Do not answer as the user. Current date: "
-            + str(date.today())
-            + "\n\n"
-            + "User: Hello\n"
-            + "ChatGPT: Hello! How can I help you today? <|im_end|>\n\n\n"
-        )
+        self.base_prompt = os.environ.get("CUSTOM_BASE_PROMPT")
+        if not self.base_prompt:
+            self.base_prompt = "You are ChatGPT, a large language model trained by OpenAI." + \
+                "Respond conversationally. Do not answer as the user. Current date: " + str(date.today())
         # Track chat history
         self.chat_history: list = []
         self.buffer = buffer
@@ -265,58 +260,47 @@ class Prompt:
     def add_to_history(
         self,
         user_request: str,
-        response: str,
-        user: str = "User",
+        response: str
     ) -> None:
         """
         Add request/response to chat history for next prompt
         """
         self.add_to_chat_history(
-            user
-            + ": "
-            + user_request
-            + "\n\n\n"
-            + "ChatGPT: "
-            + response
-            + "<|im_end|>\n",
+            {'role': "user", 'content': user_request},
+            {'role': "system", 'content': response}
         )
 
     def history(self, custom_history: list = None) -> str:
         """
         Return chat history
         """
-        return "\n".join(custom_history or self.chat_history)
+        return custom_history or self.chat_history
 
-    def construct_prompt(
+    def construct_prompt_messages(
         self,
         new_prompt: str,
-        custom_history: list = None,
-        user: str = "User",
-    ) -> str:
+        custom_history: list = None
+    ) -> List[Dict]:
         """
         Construct prompt based on chat history and request
         """
-        prompt = (
-            self.base_prompt
-            + self.history(custom_history=custom_history)
-            + user
-            + ": "
-            + new_prompt
-            + "\nChatGPT:"
-        )
+        messages = [{"role": "system", "content": self.base_prompt}] + \
+            self.history(custom_history=custom_history) + \
+            [{"role": "user", "content": new_prompt}]
         # Check if prompt over 4000*4 characters
         if self.buffer is not None:
             max_tokens = 4000 - self.buffer
         else:
             max_tokens = 3200
+        prompt = '\n\n'.join([m['content'] for m in messages])
         if len(ENCODER.encode(prompt)) > max_tokens:
             # Remove oldest chat
             if len(self.chat_history) == 0:
-                return prompt
+                return messages
             self.chat_history.pop(0)
             # Construct prompt again
-            prompt = self.construct_prompt(new_prompt, custom_history, user)
-        return prompt
+            messages = self.construct_prompt_messages(new_prompt, custom_history)
+        return messages
 
 
 class Conversation:
@@ -367,4 +351,4 @@ class Conversation:
 
 
 # Initialize chatbot
-chatbot = Chatbot(api_key=CHATGPT_KEY)
+chatbot = Chatbot(api_key=OPENAI_API_KEY)

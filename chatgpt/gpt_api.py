@@ -8,13 +8,9 @@ import sys
 from datetime import date
 import openai
 import tiktoken
-
-ENGINE = os.environ.get("GPT_ENGINE") or "text-davinci-003"
+from config import GPT_ENGINE, OPENAI_API_KEY
 
 ENCODER = tiktoken.get_encoding("gpt2")
-
-CHATGPT_KEY = "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"
-
 
 def get_max_tokens(prompt: str) -> int:
     """
@@ -35,7 +31,7 @@ class Chatbot:
         openai.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         self.conversations = Conversation()
         self.prompt = Prompt(buffer=buffer)
-        self.engine = engine or ENGINE
+        self.engine = engine or GPT_ENGINE
 
     def _get_completion(
         self,
@@ -368,4 +364,4 @@ class Conversation:
 
 
 # Initialize chatbot
-gptbot = Chatbot(api_key=CHATGPT_KEY)
+gptbot = Chatbot(api_key=OPENAI_API_KEY)

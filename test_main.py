@@ -40,8 +40,8 @@ def test_reject_chat_msg():
 def test_send_chat_msg(jwt_headers):
     data = {
         "message": "1+1=",
-        "conversationId:": "1",
-        "parentMessageId:": "1"
+        "conversationId:": 0,
+        "parentMessageId:": 0
     }
     response = client.post("/chat", headers=jwt_headers, json=data)
     assert response.status_code != 422, "chat failed:" + str(response.json())

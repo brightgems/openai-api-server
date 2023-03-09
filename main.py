@@ -2,12 +2,12 @@ import secrets
 from typing import Union
 from fastapi import FastAPI, Request, Body, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from chatgpt import chatbot
 from utils.schema import ChatRequest, Settings, User
 from utils.web_auth import Authenticator
+
 
 app = FastAPI()
 
