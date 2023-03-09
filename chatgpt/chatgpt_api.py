@@ -186,7 +186,7 @@ class AsyncChatbot(Chatbot):
 
     async def _get_completion(
         self,
-        messages: list[Dict],
+        messages: List[dict],
         temperature: float = 0.5,
         stream: bool = False,
     ):
@@ -284,7 +284,7 @@ class Prompt:
         self,
         new_prompt: str,
         custom_history: list = None
-    ) -> List[Dict]:
+    ) -> List[dict]:
         """
         Construct prompt based on chat history and request
         """
