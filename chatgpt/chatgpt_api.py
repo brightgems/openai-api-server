@@ -251,11 +251,11 @@ class Prompt:
         self.chat_history: list = []
         self.buffer = buffer
 
-    def add_to_chat_history(self, chat: str) -> None:
+    def add_to_chat_history(self, chat_qa: List) -> None:
         """
         Add chat to chat history for next prompt
         """
-        self.chat_history.append(chat)
+        self.chat_history.extend(chat_qa)
 
     def add_to_history(
         self,
