@@ -28,7 +28,7 @@ class Chatbot:
         """
         Initialize Chatbot with API key (from https://platform.openai.com/account/api-keys)
         """
-        openai.api_key = api_key or CHATGPT_KEY
+        openai.api_key = api_key or OPENAI_API_KEY
         self.conversations = Conversation()
         self.prompt = Prompt(buffer=buffer)
         self.engine = engine or CHAT_MODEL
