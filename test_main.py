@@ -12,7 +12,7 @@ client = TestClient(app)
 def jwt_headers():
     data = {
         'username': 'george.pan@unilever.com',
-        'password': AuthSettings.authjwt_secret_key}
+        'password': AuthSettings().authjwt_secret_key}
     rep = client.post(
         '/login',
         data=json.dumps(data),
