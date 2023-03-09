@@ -48,8 +48,8 @@ async def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
     print(current_user)
-    response = chatbot.ask(ask.message, conversation_id=ask.conversationId)
-    return {"ask": ask.message, "reponse": response["choices"][0]["text"]}
+    response_text = chatbot.ask(ask.message, conversation_id=ask.conversationId)
+    return {"prompt": ask.message, "reponse": response_text}
 
 
 @app.post("/auth_token", summary="获取网页端的access token")

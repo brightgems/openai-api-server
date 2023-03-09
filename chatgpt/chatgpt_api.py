@@ -64,7 +64,7 @@ class Chatbot:
         user_request: str,
         completion: dict,
         conversation_id: str = None
-    ) -> dict:
+    ) -> str:
         if completion.get("choices") is None:
             raise Exception("ChatGPT API returned no choices")
         if len(completion["choices"]) == 0:
@@ -98,7 +98,7 @@ class Chatbot:
             if response["choices"][0].get("message") is None:
                 raise Exception("ChatGPT API returned no text")
             response_text = completion["choices"][0]["message"]['content']
-            if response_text == "<|im_end|>" or not response_text.strip():
+            if not response_text.strip():
                 break
             yield response_text
             full_response += response_text
@@ -113,7 +113,7 @@ class Chatbot:
         user_request: str,
         temperature: float = 0.5,
         conversation_id: str = None
-    ) -> dict:
+    ) -> str:
         """
         Send a request to ChatGPT and return the response
         """
@@ -124,7 +124,7 @@ class Chatbot:
             temperature,
         )
         response_text = self._process_completion(user_request, completion)
-        return {'user_request': user_request, 'response': response_text}
+        return response_text
 
     def ask_stream(
         self,
@@ -142,7 +142,7 @@ class Chatbot:
             user_request=user_request,
             completion=self._get_completion(messages, temperature, stream=True)
         )
-        return {'user_request': user_request, 'response': response_text}
+        return response_text
 
     def make_conversation(self, conversation_id: str) -> None:
         """
@@ -186,16 +186,19 @@ class AsyncChatbot(Chatbot):
 
     async def _get_completion(
         self,
-        prompt: str,
+        messages: list[Dict],
         temperature: float = 0.5,
         stream: bool = False,
     ):
         """
         Get the completion function
         """
-        return await openai.Completion.acreate(
-            engine=self.engine,
-            prompt=prompt,
+
+        prompt = messages[-1]['content']
+
+        return await openai.ChatCompletion.acreate(
+            model=self.engine,
+            messages=messages,
             temperature=temperature,
             max_tokens=get_max_tokens(prompt),
             stop=["\n\n\n"],
@@ -206,7 +209,7 @@ class AsyncChatbot(Chatbot):
         self,
         user_request: str,
         temperature: float = 0.5
-    ) -> dict:
+    ) -> str:
         """
         Same as Chatbot.ask but async
         }
@@ -216,7 +219,7 @@ class AsyncChatbot(Chatbot):
             temperature,
         )
         response_text = self._process_completion(user_request, completion)
-        return {'user_request': user_request, 'response': response_text}
+        return response_text
 
     async def ask_stream(
         self,
@@ -231,7 +234,7 @@ class AsyncChatbot(Chatbot):
             user_request=user_request,
             completion=await self._get_completion(prompt, temperature, stream=True)
         )
-        return {'user_request': user_request, 'response': response_text}
+        return response_text
 
 
 class Prompt:
