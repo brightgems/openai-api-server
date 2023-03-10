@@ -65,3 +65,8 @@ async def auth_token(Authorize: AuthJWT = Depends()):
     au.begin()
     access_token = au.get_access_token()
     return access_token
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app)
