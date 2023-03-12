@@ -1,4 +1,5 @@
 
+from typing import Optional
 from pydantic import BaseModel
 import requests
 from config import JWT_SECRET_KEY
@@ -26,8 +27,8 @@ class User(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    conversationId: str = None
-    parentMessageId: str = None
+    conversationId: Optional[str] = None
+    parentMessageId: Optional[str] = None
     message: str
 
 

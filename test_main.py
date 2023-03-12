@@ -48,9 +48,7 @@ def test_get_web_auth_token(jwt_headers):
 
 def test_send_chat_msg(jwt_headers):
     data = {
-        "message": "1+1=",
-        "conversationId:": None,
-        "parentMessageId:": None
+        "message": "1+1="
     }
     response = client.post("/chat", headers=jwt_headers, json=data)
     assert response.status_code != 422, "chat failed:" + str(response.json())
