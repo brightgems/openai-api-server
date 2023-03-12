@@ -15,7 +15,7 @@ ENCODER = tiktoken.get_encoding("gpt2")
 
 def get_max_tokens(prompt: str) -> int:
     """
-    Get the max tokens for a prompt
+    Get the max tokens for a complete message
     """
     return 4000 - len(ENCODER.encode(prompt))
 
@@ -49,7 +49,8 @@ class Chatbot:
             ```
         Return: return_description
         """
-        prompt = messages[-1]['content']
+        # calcuate prompt and completion token length
+        prompt = '\n\n'.join([m['content'] for m in messages])
 
         return openai.ChatCompletion.create(
             model=self.engine,
