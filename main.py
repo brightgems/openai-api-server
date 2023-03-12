@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request, Body, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from chatgpt import chatbot
+from chatgpt import Chatbot
+from config import OPENAI_API_KEY
 from utils.schema import ChatRequest, AuthSettings, User
 from utils.web_auth import Authenticator
 from fastapi import FastAPI
@@ -67,7 +68,9 @@ def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
     print(current_user, "->", ask.message)
-    return chatbot.ask(ask.message, conversation_id=ask.conversationId)
+    # Initialize chatbot
+    chatbot = Chatbot(api_key=OPENAI_API_KEY, engine=ask.chatModel)
+    return chatbot.ask(ask.message, conversation_id=ask.conversationId, temperature=ask.temperature)
 
 
 @app.post("/chat_stream", summary="ChatGPT流式接口")
@@ -75,6 +78,8 @@ def chat_stream(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
     print(current_user, "->", ask.message)
+    # Initialize chatbot
+    chatbot = Chatbot(api_key=OPENAI_API_KEY, engine=ask.chatModel)
     return chatbot.ask_stream(ask.message, conversation_id=ask.conversationId)
 
 

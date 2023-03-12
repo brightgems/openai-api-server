@@ -111,11 +111,10 @@ class Chatbot:
             self.save_conversation(conversation_id)
 
     def ask(
-        self,
-        user_request: str,
-        temperature: float = 0.5,
-        conversation_id: str = None
-    ) -> str:
+            self,
+            user_request: str,
+            temperature: float = 0.5,
+            conversation_id: str = None) -> str:
         """
         Send a request to ChatGPT and return the response
         """
@@ -308,7 +307,3 @@ class Conversation:
         """
         with open(file, encoding="utf-8") as f:
             self.conversations = json.loads(f.read())
-
-
-# Initialize chatbot
-chatbot = Chatbot(api_key=OPENAI_API_KEY)

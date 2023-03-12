@@ -12,6 +12,7 @@ from config import GPT_ENGINE, OPENAI_API_KEY
 
 ENCODER = tiktoken.get_encoding("gpt2")
 
+
 def get_max_tokens(prompt: str) -> int:
     """
     Get the max tokens for a prompt
@@ -19,7 +20,7 @@ def get_max_tokens(prompt: str) -> int:
     return 4000 - len(ENCODER.encode(prompt))
 
 
-class Chatbot:
+class GptBot:
     """
     Official ChatGPT API
     """
@@ -176,62 +177,6 @@ class Chatbot:
         self.conversations.add_conversation(conversation_id, self.prompt.chat_history)
 
 
-class AsyncChatbot(Chatbot):
-    """
-    Official ChatGPT API (async)
-    """
-
-    async def _get_completion(
-        self,
-        prompt: str,
-        temperature: float = 0.5,
-        stream: bool = False,
-    ):
-        """
-        Get the completion function
-        """
-        return await openai.Completion.acreate(
-            engine=self.engine,
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=get_max_tokens(prompt),
-            stop=["\n\n\n"],
-            stream=stream,
-        )
-
-    async def ask(
-        self,
-        user_request: str,
-        temperature: float = 0.5,
-        user: str = "User",
-    ) -> dict:
-        """
-        Same as Chatbot.ask but async
-        }
-        """
-        completion = await self._get_completion(
-            self.prompt.construct_prompt(user_request, user=user),
-            temperature,
-        )
-        return self._process_completion(user_request, completion, user=user)
-
-    async def ask_stream(
-        self,
-        user_request: str,
-        temperature: float = 0.5,
-        user: str = "User",
-    ) -> str:
-        """
-        Same as Chatbot.ask_stream but async
-        """
-        prompt = self.prompt.construct_prompt(user_request, user=user)
-        return self._process_completion_stream(
-            user_request=user_request,
-            completion=await self._get_completion(prompt, temperature, stream=True),
-            user=user,
-        )
-
-
 class Prompt:
     """
     Prompt class with methods to construct prompt
@@ -361,7 +306,3 @@ class Conversation:
         """
         with open(file, encoding="utf-8") as f:
             self.conversations = json.loads(f.read())
-
-
-# Initialize chatbot
-gptbot = Chatbot(api_key=OPENAI_API_KEY)
