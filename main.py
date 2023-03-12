@@ -25,9 +25,6 @@ app.add_middleware(
 )
 
 
-app = FastAPI()
-
-
 @AuthJWT.load_config
 def get_config():
     return AuthSettings()
