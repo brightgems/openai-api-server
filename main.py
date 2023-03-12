@@ -1,5 +1,3 @@
-import secrets
-from typing import Union
 from fastapi import FastAPI, Request, Body, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -26,7 +24,7 @@ def home():
 
 
 @app.get("/ping", summary="ping test")
-async def ping(Authorize: AuthJWT = Depends()):
+def ping(Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     return True
 
@@ -50,16 +48,23 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 
 
 @app.post("/chat", summary="ChatGPT接口")
-async def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
+def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
-    print(current_user)
-    response_text = chatbot.ask(ask.message, conversation_id=ask.conversationId)
-    return {"prompt": ask.message, "reponse": response_text}
+    print(current_user, "->", ask.message)
+    return chatbot.ask(ask.message, conversation_id=ask.conversationId)
+
+
+@app.post("/chat_stream", summary="ChatGPT流式接口")
+def chat_stream(ask: ChatRequest, Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    print(current_user, "->", ask.message)
+    return chatbot.ask_stream(ask.message, conversation_id=ask.conversationId)
 
 
 @app.get("/web_auth_token", summary="获取网页端的access token")
-async def auth_token(Authorize: AuthJWT = Depends()):
+def auth_token(Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     au = Authenticator("freemanjameshr@gmail.com", "a12345678")
     au.begin()

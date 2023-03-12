@@ -2,6 +2,7 @@
 A simple wrapper for the official ChatGPT API
 """
 import json
+import uuid
 import os
 from datetime import date
 from typing import Dict, List
@@ -119,12 +120,16 @@ class Chatbot:
         """
         if conversation_id is not None:
             self.load_conversation(conversation_id)
+        else:
+            # create new conversation
+            conversation_id = str(uuid.uuid4())
         completion = self._get_completion(
             self.prompt.construct_prompt_messages(user_request),
             temperature,
         )
         response_text = self._process_completion(user_request, completion)
-        return response_text
+        message_id = completion['id']
+        return {'prompt': user_request, 'response': response_text, 'conversationId': conversation_id, 'messageId': message_id}
 
     def ask_stream(
         self,
@@ -137,12 +142,20 @@ class Chatbot:
         """
         if conversation_id is not None:
             self.load_conversation(conversation_id)
-        messages = self.prompt.construct_prompt_messages(user_request)
+        else:
+            # create new conversation
+            conversation_id = str(uuid.uuid4())
+        completion = self._get_completion(
+            self.prompt.construct_prompt_messages(user_request),
+            temperature,
+            stream=True
+        )
         response_text = self._process_completion_stream(
             user_request=user_request,
-            completion=self._get_completion(messages, temperature, stream=True)
+            completion=completion
         )
-        return response_text
+        message_id = completion['id']
+        return {'prompt': user_request, 'response': response_text, 'conversationId': conversation_id, 'messageId': message_id}
 
     def make_conversation(self, conversation_id: str) -> None:
         """
@@ -177,64 +190,6 @@ class Chatbot:
         Save a conversation to the conversation history
         """
         self.conversations.add_conversation(conversation_id, self.prompt.chat_history)
-
-
-class AsyncChatbot(Chatbot):
-    """
-    Official ChatGPT API (async)
-    """
-
-    async def _get_completion(
-        self,
-        messages: List[dict],
-        temperature: float = 0.5,
-        stream: bool = False,
-    ):
-        """
-        Get the completion function
-        """
-
-        prompt = messages[-1]['content']
-
-        return await openai.ChatCompletion.acreate(
-            model=self.engine,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=get_max_tokens(prompt),
-            stop=["\n\n\n"],
-            stream=stream,
-        )
-
-    async def ask(
-        self,
-        user_request: str,
-        temperature: float = 0.5
-    ) -> str:
-        """
-        Same as Chatbot.ask but async
-        }
-        """
-        completion = await self._get_completion(
-            self.prompt.construct_prompt_messages(user_request),
-            temperature,
-        )
-        response_text = self._process_completion(user_request, completion)
-        return response_text
-
-    async def ask_stream(
-        self,
-        user_request: str,
-        temperature: float = 0.5,
-    ) -> str:
-        """
-        Same as Chatbot.ask_stream but async
-        """
-        prompt = self.prompt.construct_prompt_messages(user_request)
-        response_text = self._process_completion_stream(
-            user_request=user_request,
-            completion=await self._get_completion(prompt, temperature, stream=True)
-        )
-        return response_text
 
 
 class Prompt:

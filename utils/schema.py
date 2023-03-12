@@ -15,8 +15,9 @@ class AuthSettings(BaseModel):
         is_authenticated = username.count("@unilever.com") and password == JWT_SECRET_KEY
         if not is_authenticated and password:
             resp = requests.get('https://cmiai-agileinnovation.unilever-china.com/api/v1/me',
-                                headers={"Content-Type": "application/json", "Authorization": "Bearer "+password})
+                                headers={"Content-Type": "application/json", "Authorization": "Bearer " + password})
             return resp.status_code == 200
+        return is_authenticated
 
 
 class User(BaseModel):
@@ -25,8 +26,8 @@ class User(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    conversationId: int = None
-    parentMessageId: int = None
+    conversationId: str = None
+    parentMessageId: str = None
     message: str
 
 
