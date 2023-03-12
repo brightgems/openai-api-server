@@ -30,7 +30,7 @@ class Chatbot:
         Initialize Chatbot with API key (from https://platform.openai.com/account/api-keys)
         """
         openai.api_key = api_key or OPENAI_API_KEY
-        self.conversations = Conversation()
+        self.conversation_store = Conversation()
         self.prompt = Prompt(buffer=buffer)
         self.engine = engine or CHAT_MODEL
 
@@ -161,7 +161,7 @@ class Chatbot:
         """
         Make a conversation
         """
-        self.conversations.add_conversation(conversation_id, [])
+        self.conversation_store.add_conversation(conversation_id, [])
 
     def rollback(self, num: int) -> None:
         """
@@ -180,16 +180,16 @@ class Chatbot:
         """
         Load a conversation from the conversation history
         """
-        if conversation_id not in self.conversations.conversations:
+        if conversation_id not in self.conversation_store.conversations:
             # Create a new conversation
             self.make_conversation(conversation_id)
-        self.prompt.chat_history = self.conversations.get_conversation(conversation_id)
+        self.prompt.chat_history = self.conversation_store.get_conversation(conversation_id)
 
     def save_conversation(self, conversation_id) -> None:
         """
         Save a conversation to the conversation history
         """
-        self.conversations.add_conversation(conversation_id, self.prompt.chat_history)
+        self.conversation_store.add_conversation(conversation_id, self.prompt.chat_history)
 
 
 class Prompt:

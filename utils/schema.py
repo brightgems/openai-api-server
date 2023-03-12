@@ -29,7 +29,6 @@ class User(BaseModel):
 class ChatRequest(BaseModel):
     conversationId: Optional[str] = None
     parentMessageId: Optional[str] = None
-    chatModel: Optional[str] = None
     message: str
     temperature: Optional[float] = 0.7
 

@@ -26,12 +26,23 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
+
 @AuthJWT.load_config
 def get_config():
     return AuthSettings()
 
-# exception handler for authjwt
-# in production, you can tweak performance using orjson response
+
+# api declarations
+chatBotIns = Chatbot(api_key=OPENAI_API_KEY)
 
 
 @app.get('/')
@@ -68,9 +79,7 @@ def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
     print(current_user, "->", ask.message)
-    # Initialize chatbot
-    chatbot = Chatbot(api_key=OPENAI_API_KEY, engine=ask.chatModel)
-    return chatbot.ask(ask.message, conversation_id=ask.conversationId, temperature=ask.temperature)
+    return chatBotIns.ask(ask.message, conversation_id=ask.conversationId, temperature=ask.temperature)
 
 
 @app.post("/chat_stream", summary="ChatGPT流式接口")
@@ -79,8 +88,7 @@ def chat_stream(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     current_user = Authorize.get_jwt_subject()
     print(current_user, "->", ask.message)
     # Initialize chatbot
-    chatbot = Chatbot(api_key=OPENAI_API_KEY, engine=ask.chatModel)
-    return chatbot.ask_stream(ask.message, conversation_id=ask.conversationId)
+    return chatBotIns.ask_stream(ask.message, conversation_id=ask.conversationId)
 
 
 @app.get("/web_auth_token", summary="获取网页端的access token")
