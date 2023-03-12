@@ -5,6 +5,24 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 from chatgpt import chatbot
 from utils.schema import ChatRequest, AuthSettings, User
 from utils.web_auth import Authenticator
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+origins = [
+    "https://cmiai-agileinnovation.unilever-china.com/",
+    "https://ai-categorytrend.unilever-china.com/",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app = FastAPI()
