@@ -12,8 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 origins = [
-    "https://cmiai-agileinnovation.unilever-china.com/",
-    "https://ai-categorytrend.unilever-china.com/",
+    "https://cmiai-agileinnovation.unilever-china.com",
+    "https://ai-categorytrend.unilever-china.com",
     "http://localhost:8080",
 ]
 
