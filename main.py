@@ -1,3 +1,4 @@
+import datetime
 from fastapi import FastAPI, Request, Body, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -62,7 +63,8 @@ def login(user: User, Authorize: AuthJWT = Depends()):
         raise HTTPException(status_code=401, detail="Bad username or password")
 
     # subject identifier for who this token is for example id or username from database
-    access_token = Authorize.create_access_token(subject=user.username)
+    expires = datetime.timedelta(days=1)
+    access_token = Authorize.create_access_token(subject=user.username, expires_time=expires)
     return {"access_token": access_token}
 
 
