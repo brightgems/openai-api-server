@@ -30,7 +30,8 @@ class ChatRequest(BaseModel):
     conversationId: Optional[str] = None
     parentMessageId: Optional[str] = None
     message: str
-    temperature: Optional[float] = 0.7
+    # templerature of 0 will create determinstic result
+    temperature: Optional[float] = 0.1
 
 
 class ChatResponse(BaseModel):
