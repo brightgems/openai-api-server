@@ -53,3 +53,12 @@ def test_send_chat_msg(jwt_headers):
     response = client.post("/chat", headers=jwt_headers, json=data)
     assert response.status_code != 422, "chat failed:" + str(response.json())
     print(response.json())
+
+
+def test_embedding(jwt_headers):
+    data = {
+        "text": "1+1="
+    }
+    response = client.post("/embedding", headers=jwt_headers, json=data)
+    assert response.status_code != 422, "embedding failed:" + str(response.json())
+    print(response.json())

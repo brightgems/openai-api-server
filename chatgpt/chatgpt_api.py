@@ -190,6 +190,13 @@ class Chatbot:
         """
         self.conversation_store.add_conversation(conversation_id, self.prompt.chat_history)
 
+    def text_embedding(self, text: str, model: str = "text-embedding-ada-002"):
+        response = openai.Embedding.create(
+            input=text,
+            model=model)
+        embeddings = response['data'][0]['embedding']
+        return embeddings
+
 
 class Prompt:
     """

@@ -5,7 +5,7 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from chatgpt import Chatbot
 from config import OPENAI_API_KEY
-from utils.schema import ChatRequest, AuthSettings, User
+from utils.schema import ChatRequest, EmbeddingRequest, AuthSettings, User
 from utils.web_auth import Authenticator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -91,6 +91,12 @@ def chat_stream(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     print(current_user, "->", ask.message)
     # Initialize chatbot
     return chatBotIns.ask_stream(ask.message, conversation_id=ask.conversationId)
+
+
+@app.post("/embedding", summary="Embedding接口")
+def chat(args: EmbeddingRequest, Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    return chatBotIns.text_embedding(args.text, args.model)
 
 
 @app.get("/web_auth_token", summary="获取网页端的access token")

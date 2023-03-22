@@ -34,6 +34,11 @@ class ChatRequest(BaseModel):
     temperature: Optional[float] = 0.1
 
 
+class EmbeddingRequest(BaseModel):
+    text: str
+    model: Optional[str] = "text-embedding-ada-002"
+
+
 class ChatResponse(BaseModel):
     ask: str = None
     response: str = None
