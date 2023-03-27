@@ -13,7 +13,18 @@ class AuthSettings(BaseModel):
 
     @classmethod
     def is_authenticated(cls, username, password):
+        """
+         Checks if username and password are valid. This is used to verify a user's access token to the china.
+
+         @param cls - The class that is calling this function
+         @param username - The username of the user
+         @param password - The password of the user ( JWT ).
+
+         @return True if the user is authenticated False otherwise.
+        """
         is_authenticated = username.count("@unilever.com") and password == JWT_SECRET_KEY
+
+        # Checks if the user is authenticated
         if not is_authenticated and password:
             resp = requests.get('https://cmiai-agileinnovation.unilever-china.com/api/v1/me',
                                 headers={"Content-Type": "application/json", "Authorization": "Bearer " + password})
