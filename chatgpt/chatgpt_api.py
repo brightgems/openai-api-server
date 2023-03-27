@@ -118,11 +118,10 @@ class Chatbot:
         """
         Send a request to ChatGPT and return the response
         """
-        if conversation_id is not None:
-            self.load_conversation(conversation_id)
-        else:
-            # create new conversation
+        if conversation_id is None:
+            # create new conversation id
             conversation_id = str(uuid.uuid4())
+        self.load_conversation(conversation_id)
         completion = self._get_completion(
             self.prompt.construct_prompt_messages(user_request),
             temperature,
