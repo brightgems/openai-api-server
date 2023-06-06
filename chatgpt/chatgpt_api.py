@@ -13,11 +13,32 @@ from config import CHAT_MODEL, OPENAI_API_KEY
 ENCODER = tiktoken.get_encoding("gpt2")
 
 
-def get_max_tokens(prompt: str) -> int:
+def get_model_token_limit(model: str) -> int:
+    """get max limit of token by model"""
+    if model.startswith('gtp-4'):
+        return 8000
+    elif model.startswith('gpt-4-32k'):
+        return 32000
+    else:
+        return 4000
+
+
+def get_max_tokens(model: str, prompt: str, max_expect: int = 4000) -> int:
     """
     Get the max tokens for a complete message
     """
-    return 4000 - len(ENCODER.encode(prompt))
+    token_limit = get_model_token_limit(model)
+    max_tokens = token_limit - len(ENCODER.encode(prompt))
+    if max_tokens < 0 or max_tokens > max_expect:
+        return max_expect
+    else:
+        return max_tokens
+
+
+class ChatgptAPIException(Exception):
+    """ChatGPT API error
+    """
+    pass
 
 
 class Chatbot:
@@ -25,19 +46,20 @@ class Chatbot:
     Official ChatGPT API
     """
 
-    def __init__(self, api_key: str, buffer: int = None, engine: str = None) -> None:
+    def __init__(self, api_key: str, buffer: int = None) -> None:
         """
         Initialize Chatbot with API key (from https://platform.openai.com/account/api-keys)
         """
         openai.api_key = api_key or OPENAI_API_KEY
         self.conversation_store = Conversation()
         self.prompt = Prompt(buffer=buffer)
-        self.engine = engine or CHAT_MODEL
 
     def _get_completion(
         self,
         messages: List[dict],
         temperature: float = 0.5,
+        model: str = CHAT_MODEL,
+        max_tokens: int = 4000,
         stream: bool = False,
     ) -> Dict:
         """Get the completion function
@@ -53,10 +75,10 @@ class Chatbot:
         prompt = '\n\n'.join([m['content'] for m in messages])
 
         return openai.ChatCompletion.create(
-            model=self.engine,
+            model=model,
             messages=messages,
             temperature=temperature,
-            max_tokens=get_max_tokens(prompt),
+            max_tokens=get_max_tokens(model, prompt, max_tokens),
             stop=["\n\n\n"],
             stream=stream,
         )
@@ -68,11 +90,11 @@ class Chatbot:
         conversation_id: str = None
     ) -> str:
         if completion.get("choices") is None:
-            raise Exception("ChatGPT API returned no choices")
+            raise ChatgptAPIException("ChatGPT API returned no choices")
         if len(completion["choices"]) == 0:
-            raise Exception("ChatGPT API returned no choices")
+            raise ChatgptAPIException("ChatGPT API returned no choices")
         if completion["choices"][0].get("message") is None:
-            raise Exception("ChatGPT API returned no message")
+            raise ChatgptAPIException("ChatGPT API returned no message")
         response_text = completion["choices"][0]["message"]['content']
         # Add to chat history
         self.prompt.add_to_history(
@@ -92,13 +114,13 @@ class Chatbot:
         full_response = ""
         for response in completion:
             if response.get("choices") is None:
-                raise Exception("ChatGPT API returned no choices")
+                raise ChatgptAPIException("ChatGPT API returned no choices")
             if len(response["choices"]) == 0:
-                raise Exception("ChatGPT API returned no choices")
+                raise ChatgptAPIException("ChatGPT API returned no choices")
             if response["choices"][0].get("finish_details") is not None:
                 break
             if response["choices"][0].get("message") is None:
-                raise Exception("ChatGPT API returned no text")
+                raise ChatgptAPIException("ChatGPT API returned no text")
             response_text = completion["choices"][0]["message"]['content']
             if not response_text.strip():
                 break
@@ -111,12 +133,18 @@ class Chatbot:
             self.save_conversation(conversation_id)
 
     def ask(
-            self,
-            user_request: str,
-            temperature: float = 0.5,
-            conversation_id: str = None) -> str:
+        self,
+        user_request: str,
+        temperature: float = 0.5,
+        conversation_id: str = None,
+        model: str = CHAT_MODEL,
+        max_tokens: int = 4000
+    ) -> str:
         """
         Send a request to ChatGPT and return the response
+        Args:
+            model: model support by openai
+            max_tokens: max tokens in response
         """
         if conversation_id is None:
             # create new conversation id
@@ -125,6 +153,8 @@ class Chatbot:
         completion = self._get_completion(
             self.prompt.construct_prompt_messages(user_request),
             temperature,
+            model,
+            max_tokens
         )
         response_text = self._process_completion(user_request, completion)
         message_id = completion['id']
@@ -135,6 +165,8 @@ class Chatbot:
         user_request: str,
         temperature: float = 0.5,
         conversation_id: str = None,
+        model: str = CHAT_MODEL,
+        max_tokens: int = 4000
     ) -> str:
         """
         Send a request to ChatGPT and yield the response
@@ -146,6 +178,8 @@ class Chatbot:
         completion = self._get_completion(
             self.prompt.construct_prompt_messages(user_request),
             temperature,
+            model,
+            max_tokens,
             stream=True
         )
         response_text = self._process_completion_stream(

@@ -81,7 +81,9 @@ def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
     print(current_user, "->", ask.message)
-    return chatBotIns.ask(ask.message, conversation_id=ask.conversationId, temperature=ask.temperature)
+    return chatBotIns.ask(
+        ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
+        model=ask.model, max_tokens=ask.max_tokens)
 
 
 @app.post("/chat_stream", summary="ChatGPT流式接口")
@@ -90,7 +92,9 @@ def chat_stream(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     current_user = Authorize.get_jwt_subject()
     print(current_user, "->", ask.message)
     # Initialize chatbot
-    return chatBotIns.ask_stream(ask.message, conversation_id=ask.conversationId)
+    return chatBotIns.ask_stream(
+        ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
+        model=ask.model, max_tokens=ask.max_tokens)
 
 
 @app.post("/embedding", summary="Embedding接口")

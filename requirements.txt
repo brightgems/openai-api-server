@@ -20,7 +20,7 @@ idna==3.4
 iniconfig==2.0.0
 lxml==4.9.2
 multidict==6.0.4
-openai==0.27.1
+openai==0.27.6
 numpy==1.24.2
 packaging==23.0
 pluggy==1.0.0

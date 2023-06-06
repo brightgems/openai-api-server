@@ -2,7 +2,7 @@
 from typing import Optional
 from pydantic import BaseModel
 import requests
-from config import JWT_SECRET_KEY
+from config import JWT_SECRET_KEY, CHAT_MODEL
 
 users = [("openaiDriver", "hope&poem")]
 
@@ -43,6 +43,8 @@ class ChatRequest(BaseModel):
     message: str
     # templerature of 0 will create determinstic result
     temperature: Optional[float] = 0.1
+    model: str = CHAT_MODEL
+    max_tokens: int = 4000
 
 
 class EmbeddingRequest(BaseModel):
