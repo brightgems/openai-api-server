@@ -43,9 +43,9 @@ class ChatRequest(BaseModel):
     message: str
     # templerature of 0 will create determinstic result
     temperature: Optional[float] = 0.1
-    model: str = CHAT_MODEL
-    max_tokens: int = 4000
-    base_prompt: None
+    model: Optional[str] = CHAT_MODEL
+    max_tokens: Optional[int] = 4000
+    base_prompt: Optional[str] = None
 
 
 class EmbeddingRequest(BaseModel):
