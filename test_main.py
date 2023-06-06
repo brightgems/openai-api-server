@@ -54,7 +54,7 @@ def test_send_chat_msg(jwt_headers):
 def test_send_gpt4_msg(jwt_headers):
     data = {
         "message": "1+1=",
-        "model": "gpt-4",
+        "model": "gpt-4-32k",
         "max_tokens": 8000
     }
     response = client.post("/chat", headers=jwt_headers, json=data)
