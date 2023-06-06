@@ -45,6 +45,7 @@ class ChatRequest(BaseModel):
     temperature: Optional[float] = 0.1
     model: str = CHAT_MODEL
     max_tokens: int = 4000
+    base_prompt: None
 
 
 class EmbeddingRequest(BaseModel):

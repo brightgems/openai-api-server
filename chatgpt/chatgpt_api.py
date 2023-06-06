@@ -138,7 +138,8 @@ class Chatbot:
         temperature: float = 0.5,
         conversation_id: str = None,
         model: str = CHAT_MODEL,
-        max_tokens: int = 4000
+        max_tokens: int = 4000,
+        base_prompt: str = None
     ) -> str:
         """
         Send a request to ChatGPT and return the response
@@ -151,7 +152,7 @@ class Chatbot:
             conversation_id = str(uuid.uuid4())
         self.load_conversation(conversation_id)
         completion = self._get_completion(
-            self.prompt.construct_prompt_messages(user_request),
+            self.prompt.construct_prompt_messages(user_request, base_prompt=base_prompt),
             temperature,
             model,
             max_tokens
@@ -166,7 +167,8 @@ class Chatbot:
         temperature: float = 0.5,
         conversation_id: str = None,
         model: str = CHAT_MODEL,
-        max_tokens: int = 4000
+        max_tokens: int = 4000,
+        base_prompt: str = None
     ) -> str:
         """
         Send a request to ChatGPT and yield the response
@@ -176,7 +178,7 @@ class Chatbot:
             conversation_id = str(uuid.uuid4())
         self.load_conversation(conversation_id)
         completion = self._get_completion(
-            self.prompt.construct_prompt_messages(user_request),
+            self.prompt.construct_prompt_messages(user_request, base_prompt=base_prompt),
             temperature,
             model,
             max_tokens,
@@ -240,10 +242,9 @@ class Prompt:
         """
         Initialize prompt with base prompt
         """
-        self.base_prompt = os.environ.get("CUSTOM_BASE_PROMPT")
-        if not self.base_prompt:
-            self.base_prompt = "You are ChatGPT, a large language model trained by OpenAI." + \
-                "Respond conversationally. Do not answer as the user. Current date: " + str(date.today())
+        self.default_base_prompt = os.environ.get("CUSTOM_BASE_PROMPT")
+        if not self.default_base_prompt:
+            self.default_base_prompt = "You are ChatGPT, a large language model trained by OpenAI."
         # Track chat history
         self.chat_history: list = []
         self.buffer = buffer
@@ -277,12 +278,15 @@ class Prompt:
     def construct_prompt_messages(
         self,
         new_prompt: str,
-        custom_history: list = None
+        custom_history: list = None,
+        base_prompt: str = None
     ) -> List[dict]:
         """
         Construct prompt based on chat history and request
         """
-        messages = [{"role": "system", "content": self.base_prompt}] + \
+        if not base_prompt:
+            base_prompt = self.default_base_prompt
+        messages = [{"role": "system", "content": base_prompt}] + \
             self.history(custom_history=custom_history) + \
             [{"role": "user", "content": new_prompt}]
         # Check if prompt over 4000*4 characters

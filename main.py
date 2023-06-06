@@ -103,15 +103,6 @@ def chat(args: EmbeddingRequest, Authorize: AuthJWT = Depends()):
     return chatBotIns.text_embedding(args.text, args.model)
 
 
-@app.get("/web_auth_token", summary="获取网页端的access token")
-def auth_token(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    au = Authenticator("freemanjameshr@gmail.com", "a12345678")
-    au.begin()
-    access_token = au.get_access_token()
-    return access_token
-
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app)

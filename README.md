@@ -1,16 +1,26 @@
 # openai-api-server
+
 proxy server for openai API
 
-
 ## setup virtual environment
+
+install
+
 ```
 python -m venv ./env
+```
+
+activate
+
+```
+source env/bin/activate
 ```
 
 ## chatGpt
 
 Response format
 An example API response looks as follows:
+
 ```
 {
  'id': 'chatcmpl-6p9XYPYSTTRi0xEviKjjilqrWU2Ve',
@@ -31,8 +41,9 @@ An example API response looks as follows:
 ```
 
 ## Documents
+
 [Fast API Cookbook](https://fastapi.tiangolo.com/zh/tutorial/query-params/)
 [Fastapi JWT](https://indominusbyte.github.io/fastapi-jwt-auth/usage/basic/)
 [chatgpt-api](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)
-https://github.com/rawandahmad698/PyChatGPT
-https://github.com/Chanzhaoyu/chatgpt-web
+<https://github.com/rawandahmad698/PyChatGPT>
+<https://github.com/Chanzhaoyu/chatgpt-web>
