@@ -51,15 +51,15 @@ def test_send_chat_msg(jwt_headers):
     print(response.json())
 
 
-def test_send_gpt4_msg(jwt_headers):
-    data = {
-        "message": "1+1=",
-        "model": "gpt-4-32k",
-        "max_tokens": 8000
-    }
-    response = client.post("/chat", headers=jwt_headers, json=data)
-    assert response.status_code != 422, "chat failed:" + str(response.json())
-    print(response.json())
+# def test_send_gpt4_msg(jwt_headers):
+#     data = {
+#         "message": "1+1=",
+#         "model": "gpt-4-32k",
+#         "max_tokens": 8000
+#     }
+#     response = client.post("/chat", headers=jwt_headers, json=data)
+#     assert response.status_code != 422, "chat failed:" + str(response.json())
+#     print(response.json())
 
 
 

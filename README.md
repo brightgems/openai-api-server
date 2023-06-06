@@ -2,6 +2,11 @@
 
 proxy server for openai API
 
+## Features
+
+- chat
+- embeding
+
 ## setup virtual environment
 
 install
@@ -47,3 +52,9 @@ An example API response looks as follows:
 [chatgpt-api](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)
 <https://github.com/rawandahmad698/PyChatGPT>
 <https://github.com/Chanzhaoyu/chatgpt-web>
+
+## openai shell command
+
+```
+openai api chat_completions.create -m gpt-3.5-turbo -g user "Hello world"
+```
