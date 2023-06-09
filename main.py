@@ -1,8 +1,8 @@
 from .utils.log_config import LogConfig
+import logging
 from logging.config import dictConfig
 import datetime
-import logging
-from fastapi import FastAPI, Request, Body, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Body, Depends, HTTPException, WebSocket, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
@@ -110,6 +110,27 @@ def chat(args: EmbeddingRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     return chatBotIns.text_embedding(args.text, args.model)
 
+
+@app.websocket("/chat")
+async def websocket_endpoint(websocket: WebSocket):
+    """websocket for chat"""
+    while True:
+        message = await websocket.receive()
+        if message is None:
+            break
+
+        prompt = message.data
+        # response = openai.Completion.create(
+        #     prompt=prompt,
+        #     engine="davinci",
+        #     max_tokens=100,
+        #     temperature=0.7,
+        #     top_p=1.0,
+        #     do_sample=True,
+        # )
+
+        # for word in response.choices[0].text.split():
+        #     await websocket.send(word)
 
 if __name__ == "__main__":
     import uvicorn
