@@ -68,6 +68,7 @@ def test_send_chat_with_context(jwt_headers):
     response = client.post("/chat", headers=jwt_headers, json=data)
     assert response.status_code != 422, "chat failed:" + str(response.json())
     assert response.json()['response'][:4] != "非常抱歉", "failed to get context"
+    print(response.json())
 
 # def test_send_gpt4_msg(jwt_headers):
 #     data = {
