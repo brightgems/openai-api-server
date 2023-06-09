@@ -51,6 +51,24 @@ def test_send_chat_msg(jwt_headers):
     print(response.json())
 
 
+def test_send_chat_with_context(jwt_headers):
+    data = {
+        "message": "店名: 可爱多人民广场店 探店短视频脚本",
+    }
+    response = client.post("/chat", headers=jwt_headers, json=data)
+    assert response.status_code != 422, "chat failed:" + str(response.json())
+    conversationId = response.json()['conversationId']
+    messageId = response.json()['messageId']
+    # ask continue
+    data = {
+        "message": "继续上文",
+        "conversationId": conversationId,
+        "parentMessageId": messageId
+    }
+    response = client.post("/chat", headers=jwt_headers, json=data)
+    assert response.status_code != 422, "chat failed:" + str(response.json())
+    assert response.json()['response'][:4] != "非常抱歉", "failed to get context"
+
 # def test_send_gpt4_msg(jwt_headers):
 #     data = {
 #         "message": "1+1=",
@@ -60,7 +78,6 @@ def test_send_chat_msg(jwt_headers):
 #     response = client.post("/chat", headers=jwt_headers, json=data)
 #     assert response.status_code != 422, "chat failed:" + str(response.json())
 #     print(response.json())
-
 
 
 def test_embedding(jwt_headers):

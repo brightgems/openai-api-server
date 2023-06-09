@@ -46,6 +46,7 @@ class ChatRequest(BaseModel):
     model: Optional[str] = CHAT_MODEL
     max_tokens: Optional[int] = 4000
     base_prompt: Optional[str] = None
+    history_msg: Optional[dict] = None
 
 
 class EmbeddingRequest(BaseModel):

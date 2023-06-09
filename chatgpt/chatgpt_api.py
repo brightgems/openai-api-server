@@ -289,7 +289,7 @@ class Prompt:
         messages = [{"role": "system", "content": base_prompt}] + \
             self.history(custom_history=custom_history) + \
             [{"role": "user", "content": new_prompt}]
-        # Check if prompt over 4000*4 characters
+        # Check if prompt over 4000 tokens
         if self.buffer is not None:
             max_tokens = 4000 - self.buffer
         else:

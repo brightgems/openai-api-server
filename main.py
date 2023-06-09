@@ -1,4 +1,7 @@
+from .utils.log_config import LogConfig
+from logging.config import dictConfig
 import datetime
+import logging
 from fastapi import FastAPI, Request, Body, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -10,7 +13,12 @@ from utils.web_auth import Authenticator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+
 app = FastAPI()
+
+dictConfig(LogConfig().dict())
+logger = logging.getLogger("mycoolapp")
+
 
 origins = [
     "https://cmiai-agileinnovation.unilever-china.com",
@@ -80,7 +88,7 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
-    print(current_user, "->", ask.message)
+    logger.debug(current_user + "->" + ask.message)
     return chatBotIns.ask(
         ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
         model=ask.model, max_tokens=ask.max_tokens)
@@ -90,7 +98,7 @@ def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
 def chat_stream(ask: ChatRequest, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
-    print(current_user, "->", ask.message)
+    logger.debug(current_user + "->" + ask.message)
     # Initialize chatbot
     return chatBotIns.ask_stream(
         ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
