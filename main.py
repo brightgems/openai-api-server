@@ -1,4 +1,3 @@
-from .utils.log_config import LogConfig
 import logging
 from logging.config import dictConfig
 import datetime
@@ -8,6 +7,7 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from chatgpt import Chatbot
 from config import OPENAI_API_KEY
+from utils.log_config import LogConfig
 from utils.schema import ChatRequest, EmbeddingRequest, AuthSettings, User
 from utils.web_auth import Authenticator
 from fastapi import FastAPI
