@@ -4,6 +4,8 @@ A simple wrapper for the official ChatGPT API
 import json
 import uuid
 import os
+import time
+import threading
 from datetime import date
 from typing import Dict, List
 import openai
@@ -41,6 +43,9 @@ class ChatgptAPIException(Exception):
     pass
 
 
+SAVE_FILE = 'conversation.json'
+
+
 class Chatbot:
     """
     Official ChatGPT API
@@ -52,7 +57,21 @@ class Chatbot:
         """
         openai.api_key = api_key or OPENAI_API_KEY
         self.conversation_store = Conversation()
+        if os.path.exists(SAVE_FILE):
+            self.conversation_store.load(SAVE_FILE)
         self.prompt = Prompt(buffer=buffer)
+        # Create a thread to call conversation_store.save every 10 minutes.
+        self.save_thread = threading.Thread(target=self._save_conversation_store)
+        self.save_thread.daemon = True
+        self.save_thread.start()
+
+    def _save_conversation_store(self) -> None:
+        """
+        Save the conversation store to disk every 10 minutes.
+        """
+        while True:
+            time.sleep(600)
+            self.conversation_store.save(SAVE_FILE)
 
     def _get_completion(
         self,
