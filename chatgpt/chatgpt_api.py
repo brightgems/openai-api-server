@@ -197,7 +197,7 @@ class AsyncChatbot(Chatbot):
         """
         # calcuate prompt and completion token length
         prompt = '\n\n'.join([m['content'] for m in messages])
-        return await openai.Completion.acreate(
+        return await openai.ChatCompletion.acreate(
             engine=model,
             prompt=prompt,
             temperature=temperature,

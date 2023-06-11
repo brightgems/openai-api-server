@@ -92,7 +92,7 @@ def chat(ask: ChatRequest, authorize: AuthJWT = Depends()):
     # Initialize chatbot
     chatbot_ins = Chatbot(api_key=OPENAI_API_KEY)
     try:
-        chatbot_ins.ask(
+        return chatbot_ins.ask(
             ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
             model=ask.model, max_tokens=ask.max_tokens)
     except openai.error.RateLimitError as exc:

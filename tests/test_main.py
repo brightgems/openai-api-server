@@ -5,7 +5,7 @@ import json
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 from starlette.websockets import WebSocket
-from config import JWT_SECRET_KEY
+from config import JWT_SECRET_KEY, CHAT_MODEL
 from main import app
 
 client = TestClient(app)
@@ -102,7 +102,7 @@ async def test_websocket_endpoint(jwt_headers):
             "prompt": "Hello",
             "conversationId": "123",
             "temperature": 0.5,
-            "model": "davinci",
+            "model": CHAT_MODEL,
             "max_tokens": 50
         }
         # Send a message to the websocket endpoint.
