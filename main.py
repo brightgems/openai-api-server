@@ -118,10 +118,12 @@ async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends(
     # Initialize chatbot
     chatbot_ins = AsyncChatbot(api_key=OPENAI_API_KEY)
 
-    async for message in websocket.receive_json():
+    while True:
+        message = await websocket.receive_text()
         logger.debug(f'received message: {str(message)}')
         if message is None:
             break
+        message = json.loads(message)
         if current_user:
             logger.info(current_user + "->" + message['prompt'])
         try:
@@ -133,7 +135,7 @@ async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends(
             await websocket.send_json({'state': 'ERROR', 'details': str(ex)})
             continue
 
-        for word in words:
+        async for word in words:
             await websocket.send(word)
         await websocket.send_json({'state': 'EMD', 'conversationId': chatbot_ins.conversation_id})
 
