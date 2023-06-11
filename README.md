@@ -21,6 +21,9 @@ activate
 source env/bin/activate
 ```
 
+## start application
+`uvicorn` server is started with the `--ws websockets `
+
 ## chatGpt
 
 Response format

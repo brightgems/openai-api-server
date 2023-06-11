@@ -1,1 +1,1 @@
-from .chatgpt_api import Chatbot
+from .chatgpt_api import Chatbot, AsyncChatbot

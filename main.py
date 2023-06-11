@@ -1,11 +1,14 @@
+import json
 import logging
+import asyncio
 from logging.config import dictConfig
 import datetime
 from fastapi import FastAPI, Request, Body, Depends, HTTPException, WebSocket, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from chatgpt import Chatbot
+import pytest
+from chatgpt import Chatbot, AsyncChatbot
 from config import OPENAI_API_KEY
 from utils.log_config import LogConfig
 from utils.schema import ChatRequest, EmbeddingRequest, AuthSettings, User
@@ -50,29 +53,25 @@ def get_config():
     return AuthSettings()
 
 
-# api declarations
-chatBotIns = Chatbot(api_key=OPENAI_API_KEY)
-
-
 @app.get('/')
 def home():
     return {"msg": "Hello World"}
 
 
 @app.get("/ping", summary="ping test")
-def ping(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
+def ping(authorize: AuthJWT = Depends()):
+    authorize.jwt_required()
     return True
 
 
 @app.post('/login')
-def login(user: User, Authorize: AuthJWT = Depends()):
+def login(user: User, authorize: AuthJWT = Depends()):
     if not AuthSettings.is_authenticated(user.username, user.password):
         raise HTTPException(status_code=401, detail="Bad username or password")
 
     # subject identifier for who this token is for example id or username from database
     expires = datetime.timedelta(days=1)
-    access_token = Authorize.create_access_token(subject=user.username, expires_time=expires)
+    access_token = authorize.create_access_token(subject=user.username, expires_time=expires)
     return {"access_token": access_token}
 
 
@@ -85,53 +84,53 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 
 
 @app.post("/chat", summary="ChatGPT接口")
-def chat(ask: ChatRequest, Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    current_user = Authorize.get_jwt_subject()
-    logger.debug(current_user + "->" + ask.message)
-    return chatBotIns.ask(
-        ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
-        model=ask.model, max_tokens=ask.max_tokens)
-
-
-@app.post("/chat_stream", summary="ChatGPT流式接口")
-def chat_stream(ask: ChatRequest, Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    current_user = Authorize.get_jwt_subject()
+def chat(ask: ChatRequest, authorize: AuthJWT = Depends()):
+    authorize.jwt_required()
+    current_user = authorize.get_jwt_subject()
     logger.debug(current_user + "->" + ask.message)
     # Initialize chatbot
-    return chatBotIns.ask_stream(
+    chatbot_ins = Chatbot(api_key=OPENAI_API_KEY)
+    return chatbot_ins.ask(
         ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
         model=ask.model, max_tokens=ask.max_tokens)
 
 
 @app.post("/embedding", summary="Embedding接口")
-def chat(args: EmbeddingRequest, Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    return chatBotIns.text_embedding(args.text, args.model)
+def embedding(args: EmbeddingRequest, authorize: AuthJWT = Depends()):
+    authorize.jwt_required()
+    chatbot_ins = Chatbot(api_key=OPENAI_API_KEY)
+    return chatbot_ins.text_embedding(args.text, args.model)
 
 
-@app.websocket("/chat")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/chat_stream", name="ChatGPT流式接口")
+async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends()):
     """websocket for chat"""
+    authorize.jwt_required("websocket", token=websocket.headers['authorization'].split(' ')[1])
+    current_user = authorize.get_jwt_subject()
+    await websocket.accept()
+    # Initialize chatbot
+    chatbot_ins = AsyncChatbot(api_key=OPENAI_API_KEY)
+
     while True:
-        message = await websocket.receive()
+        message = await websocket.receive_json()
+        logger.debug(f'received message: {str(message)}')
         if message is None:
             break
+        if current_user:
+            logger.info(current_user + "->" + message['prompt'])
+        try:
+            words = await chatbot_ins.ask_stream(
+                message['prompt'], conversation_id=message['conversationId'], temperature=message['temperature'],
+                model=message['model'], max_tokens=message['max_tokens'])
+        except Exception as ex:
+            logger.error("Error occurred while calling OpenAI API: %s", ex)
+            await websocket.send_json({'state': 'ERROR'})
+            continue
 
-        prompt = message.data
-        # response = openai.Completion.create(
-        #     prompt=prompt,
-        #     engine="davinci",
-        #     max_tokens=100,
-        #     temperature=0.7,
-        #     top_p=1.0,
-        #     do_sample=True,
-        # )
-
-        # for word in response.choices[0].text.split():
-        #     await websocket.send(word)
+        async for word in words:
+            await websocket.send(word)
+        await websocket.send_json({'state': 'EMD', 'conversationId': chatbot_ins.conversation_id})
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app)
+    uvicorn.run(app, ws='websockets')

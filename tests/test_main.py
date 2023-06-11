@@ -1,7 +1,10 @@
 
 import pytest
+import websockets
 import json
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
+from starlette.websockets import WebSocket
 from config import JWT_SECRET_KEY
 from main import app
 
@@ -88,3 +91,37 @@ def test_embedding(jwt_headers):
     response = client.post("/embedding", headers=jwt_headers, json=data)
     assert response.status_code != 422, "embedding failed:" + str(response.json())
     print(response.json())
+
+
+@pytest.mark.asyncio
+async def test_websocket_endpoint(jwt_headers):
+    """Test the websocket_endpoint function."""
+    async with websockets.connect("ws://localhost:8000/chat_stream", extra_headers=jwt_headers, close_timeout=60) as websocket:
+        print("WebSocket connected!")
+        message = {
+            "prompt": "Hello",
+            "conversationId": "123",
+            "temperature": 0.5,
+            "model": "davinci",
+            "max_tokens": 50
+        }
+        # Send a message to the websocket endpoint.
+        await websocket.send(json.dumps(message))
+
+        # Receive a response from the WebSocket
+        response_text = ''
+        while True:
+            response = await websocket.recv()
+            assert response is not None
+            print(response)
+            response_json = json.loads(response)
+            if isinstance(response_json, str):
+                response_text += response_json
+            elif "state" in response_json:
+                break
+        assert response_json['state']=='END'
+        assert "conversationId" in response_json
+        print(response_text)
+        # Assert that the response is correct.
+        assert response == {'words': ['Hello', 'world!'], 'conversationId': '1234567890'}
+    print("WebSocket disconnected.")
