@@ -119,6 +119,7 @@ async def test_websocket_endpoint(jwt_headers):
                 response_text += response_json
             elif "state" in response_json:
                 break
+        print(response_json)
         assert response_json['state']=='END'
         assert "conversationId" in response_json
         print(response_text)

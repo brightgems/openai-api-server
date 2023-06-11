@@ -131,7 +131,7 @@ async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends(
                 model=message['model'], max_tokens=message['max_tokens'])
         except Exception as ex:
             logger.error("Error occurred while calling OpenAI API: %s", ex)
-            await websocket.send_json({'state': 'ERROR'})
+            await websocket.send_json({'state': 'ERROR', 'details': str(ex)})
             continue
 
         for word in words:
