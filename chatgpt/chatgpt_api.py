@@ -260,7 +260,7 @@ class AsyncChatbot(Chatbot):
             stream=True
         )
         self.conversation_id = conversation_id
-        return self._process_completion_stream(
+        return await self._process_completion_stream(
             user_request=user_request,
             completion=completion
         )
