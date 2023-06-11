@@ -151,14 +151,14 @@ class AsyncChatbot(Chatbot):
     """
     conversation_id = None
 
-    def _process_completion_stream(
+    async def _process_completion_stream(
         self,
         user_request: str,
         completion: dict,
         conversation_id: str = None
     ) -> str:
         full_response = ""
-        for response in completion:
+        async for response in completion:
             if response.get("choices") is None:
                 raise ChatgptAPIException("ChatGPT API returned no choices")
             if len(response["choices"]) == 0:
