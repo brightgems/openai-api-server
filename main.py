@@ -118,8 +118,7 @@ async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends(
     # Initialize chatbot
     chatbot_ins = AsyncChatbot(api_key=OPENAI_API_KEY)
 
-    while True:
-        message = await websocket.receive_json()
+    async for message in websocket.receive_json():
         logger.debug(f'received message: {str(message)}')
         if message is None:
             break
