@@ -149,15 +149,16 @@ class AsyncChatbot(Chatbot):
     """
     Official ChatGPT API (async)
     """
+    conversation_id = None
 
-    async def _process_completion_stream(
+    def _process_completion_stream(
         self,
         user_request: str,
         completion: dict,
         conversation_id: str = None
     ) -> str:
         full_response = ""
-        async for response in completion:
+        for response in completion:
             if response.get("choices") is None:
                 raise ChatgptAPIException("ChatGPT API returned no choices")
             if len(response["choices"]) == 0:
@@ -251,7 +252,7 @@ class AsyncChatbot(Chatbot):
             # create new conversation id
             conversation_id = str(uuid.uuid4())
         self.load_conversation(conversation_id)
-        completion = self._get_completion(
+        completion = await self._get_completion(
             self.prompt.construct_prompt_messages(user_request, base_prompt=base_prompt),
             temperature,
             model,

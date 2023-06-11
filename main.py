@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request, Body, Depends, HTTPException, WebSocket, s
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
+import openai
 import pytest
 from chatgpt import Chatbot, AsyncChatbot
 from config import OPENAI_API_KEY
@@ -90,9 +91,15 @@ def chat(ask: ChatRequest, authorize: AuthJWT = Depends()):
     logger.debug(current_user + "->" + ask.message)
     # Initialize chatbot
     chatbot_ins = Chatbot(api_key=OPENAI_API_KEY)
-    return chatbot_ins.ask(
-        ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
-        model=ask.model, max_tokens=ask.max_tokens)
+    try:
+        chatbot_ins.ask(
+            ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
+            model=ask.model, max_tokens=ask.max_tokens)
+    except openai.error.RateLimitError as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(exc)}
+        )
 
 
 @app.post("/embedding", summary="Embedding接口")
@@ -127,7 +134,7 @@ async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends(
             await websocket.send_json({'state': 'ERROR'})
             continue
 
-        async for word in words:
+        for word in words:
             await websocket.send(word)
         await websocket.send_json({'state': 'EMD', 'conversationId': chatbot_ins.conversation_id})
 
