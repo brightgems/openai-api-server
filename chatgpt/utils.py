@@ -7,7 +7,9 @@ def get_model_token_limit(model: str) -> int:
     """get max limit of token by model"""
     if model.startswith('gtp-4'):
         return 8000
-    elif model.startswith('gpt-4-32k'):
+    elif model.find('16k') > 0:
+        return 16000
+    if model.find('32k') > 0:
         return 32000
     else:
         return 4000
