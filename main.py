@@ -13,7 +13,6 @@ from chatgpt import Chatbot, AsyncChatbot
 from config import OPENAI_API_KEY
 from utils.log_config import LogConfig
 from utils.schema import ChatRequest, EmbeddingRequest, AuthSettings, User
-from utils.web_auth import Authenticator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
