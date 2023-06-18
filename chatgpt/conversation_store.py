@@ -68,7 +68,7 @@ class Prompt:
         if self.buffer is not None:
             max_tokens = 4000 - self.buffer
         else:
-            max_tokens = 3200
+            max_tokens = 3600
         prompt = '\n\n'.join([m['content'] for m in messages])
         if len(ENCODER.encode(prompt)) > max_tokens:
             # Remove oldest chat
