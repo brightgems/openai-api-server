@@ -24,7 +24,7 @@ def get_max_tokens(model: str, prompt: str, max_expect: int = 4000) -> int:
     if max_tokens < 0 or max_tokens > max_expect:
         return max_expect
     else:
-        return max_tokens
+        return 1000
 
 
 class ChatgptAPIException(Exception):
