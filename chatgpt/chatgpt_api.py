@@ -41,7 +41,7 @@ class Chatbot:
         """
         # calcuate prompt and completion token length
         prompt = '\n\n'.join([m['content'] for m in messages])
-
+        openai.proxy
         return openai.ChatCompletion.create(
             model=model,
             messages=messages,

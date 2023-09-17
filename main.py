@@ -1,14 +1,15 @@
 import json
 import logging
-import asyncio
+import aiohttp
+import requests
 from logging.config import dictConfig
 import datetime
-from fastapi import FastAPI, Request, Body, Depends, HTTPException, WebSocket, status
+from fastapi import FastAPI, Request, Response, Body, Depends, HTTPException, WebSocket, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 import openai
-import pytest
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from chatgpt import Chatbot, AsyncChatbot
 from config import OPENAI_API_KEY
 from utils.log_config import LogConfig
@@ -137,6 +138,38 @@ async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends(
         async for word in words:
             await websocket.send(word)
         await websocket.send_json({'state': 'EMD', 'conversationId': chatbot_ins.conversation_id})
+
+
+class OpenAIProxy(BaseHTTPMiddleware):
+    def __init__(self, app, base_url: str):
+        super().__init__(app)
+        self.base_url = base_url
+
+    async def proxy(self, request: Request, call_next: RequestResponseEndpoint):
+        url = self.base_url + request.url.path.replace('/api', '')
+        headers = {k: v for k, v in request.headers.items() if k != "host"}
+        # openapi cannot accept content-encoding: gzip
+        headers['accept-encoding'] = 'identity'
+        async with aiohttp.ClientSession() as client:
+            async with client.request(
+                method=request.method,
+                url=url,
+                headers=headers,
+                data=await request.body(),
+            ) as resp:
+                body = await resp.read()
+                return Response(body, status_code=resp.status, headers=resp.headers)
+
+
+@app.middleware("http")
+async def add_proxy_middleware(request: Request, call_next: RequestResponseEndpoint):
+    if request.url.path.startswith("/api/"):
+        async def dispatch_func(request: Request):
+            return await OpenAIProxy(app, "https://api.openai.com/v1").proxy(request, call_next)
+
+        return await dispatch_func(request)
+    else:
+        return await call_next(request)
 
 if __name__ == "__main__":
     import uvicorn

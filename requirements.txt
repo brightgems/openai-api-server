@@ -20,7 +20,7 @@ idna==3.4
 iniconfig==2.0.0
 lxml==4.9.2
 multidict==6.0.4
-openai==0.27.6
+openai==0.28.0
 numpy==1.24.2
 packaging==23.0
 pluggy==1.0.0
@@ -45,3 +45,4 @@ urllib3==1.26.14
 uvicorn==0.20.0
 yarl==1.8.2
 websockets==11.0.3
+langchain
