@@ -1,6 +1,7 @@
 import tiktoken
 
-ENCODER = tiktoken.get_encoding("gpt2")
+# gpt-4, gpt-3.5-turbo, text-embedding-ada-002
+ENCODER = tiktoken.get_encoding("cl100k_base")
 
 
 def get_model_token_limit(model: str) -> int:
