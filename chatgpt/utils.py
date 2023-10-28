@@ -22,10 +22,12 @@ def get_max_tokens(model: str, prompt: str, max_expect: int = 4000) -> int:
     """
     token_limit = get_model_token_limit(model)
     max_tokens = token_limit - len(ENCODER.encode(prompt))
-    if max_tokens < 0 or max_tokens > max_expect:
+    if max_tokens < 0:
+        return 512
+    elif max_tokens > max_expect:
         return max_expect
     else:
-        return 1000
+        return max_tokens
 
 
 class ChatgptAPIException(Exception):
