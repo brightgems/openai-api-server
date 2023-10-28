@@ -101,7 +101,7 @@ class Chatbot:
         )
         response_text = self._process_completion(user_request, completion)
         message_id = completion['id']
-        return {'prompt': user_request, 'response': response_text, 'conversationId': conversation_id, 'messageId': message_id}
+        return {'prompt': user_request, 'response': response_text, 'conversationId': conversation_id, 'messageId': message_id, 'model': model}
 
     def make_conversation(self, conversation_id: str) -> None:
         """
