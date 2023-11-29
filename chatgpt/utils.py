@@ -6,11 +6,13 @@ ENCODER = tiktoken.get_encoding("cl100k_base")
 
 def get_model_token_limit(model: str) -> int:
     """get max limit of token by model"""
-    if model.startswith('gtp-4'):
+    if model == 'gpt-4-1106-preview':
+        return 4000
+    elif model == 'gtp-4':
         return 8000
     elif model.find('16k') > 0:
         return 16000
-    if model.find('32k') > 0:
+    elif model.find('32k') > 0:
         return 32000
     else:
         return 4000
