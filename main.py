@@ -72,7 +72,8 @@ def login(user: User, authorize: AuthJWT = Depends()):
 
     # subject identifier for who this token is for example id or username from database
     expires = datetime.timedelta(days=1)
-    access_token = authorize.create_access_token(subject=user.username, expires_time=expires)
+    access_token = authorize.create_access_token(
+        subject=user.username, expires_time=expires)
     return {"access_token": access_token}
 
 
@@ -94,7 +95,7 @@ def chat(ask: ChatRequest, authorize: AuthJWT = Depends()):
     try:
         return chatbot_ins.ask(
             ask.message, conversation_id=ask.conversationId, temperature=ask.temperature,
-            model=ask.model, max_tokens=ask.max_tokens)
+            model=ask.model, max_tokens=ask.max_tokens, base_prompt=ask.base_prompt)
     except openai.error.RateLimitError as exc:
         return JSONResponse(
             status_code=500,
@@ -112,7 +113,8 @@ def embedding(args: EmbeddingRequest, authorize: AuthJWT = Depends()):
 @app.websocket("/chat_stream", name="ChatGPT流式接口")
 async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends()):
     """websocket for chat"""
-    authorize.jwt_required("websocket", token=websocket.headers['authorization'].split(' ')[1])
+    authorize.jwt_required(
+        "websocket", token=websocket.headers['authorization'].split(' ')[1])
     current_user = authorize.get_jwt_subject()
     await websocket.accept()
     # Initialize chatbot
@@ -129,7 +131,7 @@ async def websocket_endpoint(websocket: WebSocket, authorize: AuthJWT = Depends(
         try:
             words = await chatbot_ins.ask_stream(
                 message['prompt'], conversation_id=message['conversationId'], temperature=message['temperature'],
-                model=message['model'], max_tokens=message['max_tokens'])
+                model=message['model'], max_tokens=message['max_tokens'], base_prompt=message.get('base_prompt'))
         except Exception as ex:
             logger.error("Error occurred while calling OpenAI API: %s", ex)
             await websocket.send_json({'state': 'ERROR', 'details': str(ex)})
